@@ -131,31 +131,7 @@ SaveNExit:
 if (importance = 0) {
 msgbox Must add importance
 } else {
-GuiControlGet, QVar,, QCon
-GuiControlGet, AVar,, ACon
-FileAppend, %QVar% `n, toRemember.dat
-FileAppend, %AVar% `n, toRemember.dat
-FormatTime, Current,, yyyyMMddHHmmss
-;msgbox, %QVar%
-NextDate := NewDate()
-
-
-
-
-
-FormatTime, NextDate, %NextDate%, yyyyMMdd
-toSearch = %QVar% %AVar%
-vText := GetKeyWords(toSearch)
-linkedQuestions := CreateLinkedQuestions(vText)
-FileAppend, %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_%importance% `n, qStat.dat
-;qStat.dat defaults= lastdate (today), nextdate (tomorrow), e-factor (2.5),iteration, interval (1), isActive (1), relatedQuestions
-GuiControl, , QCon, % " " QCon
-GuiControl, , ACon, % " " ACon
-GuiControl, , Vimp, assets/vimportunse.png
-GuiControl, , Imp, assets/importunse.png
-GuiControl, , Limp, assets/limportunse.png
-FileAppend, %vText%`n, keyWords.dat
-
+SaveFunc()
 Iterator()
 }
 return
@@ -163,6 +139,28 @@ return
 Skip:
 Iterator()
 return
+
+SaveFunc() {
+    global importance
+GuiControlGet, QVar,, QCon
+GuiControlGet, AVar,, ACon
+;FileAppend, %QVar% `n, toRemember.dat
+;FileAppend, %AVar% `n, toRemember.dat
+FormatTime, Current,, yyyyMMddHHmmss
+NextDate := NewDate()
+FormatTime, NextDate, %NextDate%, yyyyMMdd
+toSearch = %QVar% %AVar%
+vText := GetKeyWords(toSearch)
+linkedQuestions := CreateLinkedQuestions(vText)
+FileAppend, %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_%importance%_%QVar%_%AVar%  `n, qStat.dat
+;qStat.dat defaults= lastdate (today), nextdate (tomorrow), e-factor (2.5),iteration, interval (1), isActive (1), relatedQuestions, importance, question, answer
+GuiControl, , QCon, % " " QCon
+GuiControl, , ACon, % " " ACon
+GuiControl, , Vimp, assets/vimportunse.png
+GuiControl, , Imp, assets/importunse.png
+GuiControl, , Limp, assets/limportunse.png
+FileAppend, %vText%`n, keyWords.dat
+}
 
 NewDate() {
     NextDate = %a_now%
@@ -221,29 +219,7 @@ SaveNNew:
 if (importance = 0) {
 msgbox Must add importance
 } else {
-GuiControlGet, QVar,, QCon
-GuiControlGet, AVar,, ACon
-FileAppend, %QVar% `n, toRemember.dat
-FileAppend, %AVar% `n, toRemember.dat
-FormatTime, Current,, yyyyMMddHHmmss
-NextDate := NewDate()
-
-
-
-
-
-FormatTime, NextDate, %NextDate%, yyyyMMdd
-toSearch = %QVar% %AVar%
-vText := GetKeyWords(toSearch)
-linkedQuestions := CreateLinkedQuestions(vText)
-FileAppend, %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_%importance% `n, qStat.dat
-GuiControl, , QCon, % " " QCon
-GuiControl, , ACon, % " " ACon
-GuiControl, , Vimp, assets/vimportunse.png
-GuiControl, , Imp, assets/importunse.png
-GuiControl, , Limp, assets/limportunse.png
-
-FileAppend, %vText%`n, keyWords.dat
+SaveFunc()
 importance = 0
 GuiControl, , ImpGU, Importance:
 }

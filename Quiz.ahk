@@ -116,12 +116,6 @@ Edit:
     InputBox , newQuestion, Question, Edit the Question, , , , , , , , %questionVar%
     InputBox , newAnswer, Answer, Edit the Answer, , , , , , , , %answerVar%
     InputBox , newPriority, Importance, Enter Importance: 1 (Less important) - 2 (Important) - 3 (Very Important), , , , , , , ,
-        FileRead , filecontent, toRemember.dat
-    StringReplace , filecontent, filecontent, %questionVar%, %newQuestion%,
-    StringReplace , filecontent, filecontent, %answerVar%, %newAnswer%,
-    FileDelete , toRemember.dat
-    FileAppend , %filecontent%, toRemember.dat
-    sleep 200
     FileReadLine , questionStat, qStat.dat, %questionNo%
     sleep 200
     questionStats := StrSplit(questionStat, "_")
@@ -132,7 +126,9 @@ Edit:
     interval := questionStats[5]
     relations := questionStats[7]
     importance := questionStats[8]
-    newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%newPriority%
+    questionsav := newQuestion
+    answersav := newAnswer
+    newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%newPriority%_%questionsav%_%answersav%
     FileRead , filecontent, qStat.dat
     StringReplace , filecontent, filecontent, %questionStat%, %newStats%
     FileDelete , qStat.dat
@@ -154,7 +150,9 @@ Delete:
     interval := questionStats[5]
     relations := questionStats[7]
     importance := questionStats[8]
-    newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_0_%relations%_%importance%
+      questionsav := questionStats[9]
+    answersav := questionStats[10]
+    newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_0_%relations%_%importance%_%questionsav%_%answersav%
     FileRead , filecontent, qStat.dat
     StringReplace , filecontent, filecontent, %questionStat%, %newStats%
     FileDelete , qStat.dat
@@ -309,10 +307,12 @@ Afraid:
     CreateElaboration() {
         global newQuality
         global questionNo
-        FileReadLine , conQuestVar, toRemember.dat, questionNo * 2 - 1
-        FileReadLine , conAnsVar, toRemember.dat, questionNo * 2
+    FileReadLine , questionStat, qStat.dat, %questionNo%
+   questionStats := StrSplit(questionStat, "_")
+    conQuestVar := questionStats[9]
+    conAnsVar := questionStats[10]
 
-        InputBox , newAnswer, Elaboration, Elaborate upon the following: %conQuestVar% - %conAnsVar%, , , , , , , ,
+               InputBox , newAnswer, Elaboration, Elaborate upon the following: %conQuestVar% - %conAnsVar%, , , , , , , ,
             if (newAnswer != "") {
                 FileAppend , %questionNo%_%newAnswer% `n, elaborations.dat
                 Gui , wrongM: Hide
@@ -324,8 +324,10 @@ Afraid:
     Rote() {
         global newQuality
         global questionNo
-        FileReadLine , conQuestVar, toRemember.dat, questionNo * 2 - 1
-        FileReadLine , conAnsVar, toRemember.dat, questionNo * 2
+    FileReadLine , questionStat, qStat.dat, %questionNo%
+   questionStats := StrSplit(questionStat, "_")
+    conQuestVar := questionStats[9]
+    conAnsVar := questionStats[10]
 
         InputBox , newQuestion, Rote Question, Type out the following: %conQuestVar% - %conAnsVar% , , , , , , , ,
             ;InputBox, newAnswer , Rote Answer, Type out the following: %conAnsVar%, , , , , , , ,
@@ -337,8 +339,10 @@ Afraid:
     Relational() {
         global newQuality
         global questionNo
-        FileReadLine , conQuestVar, toRemember.dat, questionNo * 2 - 1
-        FileReadLine , conAnsVar, toRemember.dat, questionNo * 2
+    FileReadLine , questionStat, qStat.dat, %questionNo%
+   questionStats := StrSplit(questionStat, "_")
+    conQuestVar := questionStats[9]
+    conAnsVar := questionStats[10]
 
         InputBox , newQuestion, Relational Question, Create a new question that is the opposite of '%conQuestVar% - %conAnsVar%'.New Question: , , , , , , , ,
             InputBox , newAnswer, Relational Answer, Create a new question that is the opposite of '%conQuestVar% - %conAnsVar%'.New Answer: , , , , , , , ,
@@ -353,16 +357,15 @@ Afraid:
                 iteration := questionStats[4]
                 interval := questionStats[5]
                 importance := questionStats[8]
+                questionSav := questionStats[9]
+                answerSav := questionStats[10]
                 relations := LTrim(questionStats[7], linkStats[1])
                 relations := LTrim(relations, ",")
-                newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%importance%
+                newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%importance%_%questionSav%_%answerSav%
                 FileRead , filecontent, qStat.dat
                 StringReplace , filecontent, filecontent, %questionStat%, %newStats%
                 FileDelete , qStat.dat
                 FileAppend , %filecontent%, qStat.dat
-                sleep 200
-                FileAppend , %newQuestion% `n, toRemember.dat
-                FileAppend , %newAnswer% `n, toRemember.dat
                 FormatTime , Current, , yyyyMMddHHmmss
                 NextDate = %a_now%
                 NextDate += +60, Days
@@ -422,7 +425,7 @@ Afraid:
                 toSearch = %newQuestion% %newAnswer%
                 vText := GetKeyWords(toSearch)
                 linkedQuestions := CreateLinkedQuestions(vText)
-                FileAppend , %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_1 `n, qStat.dat
+                FileAppend , %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_1_%newQuestion%_%newAnswer% `n, qStat.dat
                 FileAppend , %vText%`n, keyWords.dat
             }
         Gui , wrongM: Hide
@@ -433,7 +436,9 @@ Afraid:
     GoogleQuestion() {
         global newQuality
         global questionNo
-        FileReadLine , queryQuestVar, toRemember.dat, questionNo * 2 - 1
+            FileReadLine , questionStat, qStat.dat, %questionNo%
+   questionStats := StrSplit(questionStat, "_")
+    queryQuestVar := questionStats[9]
         parameter = C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe https://www.google.com/search?q="%queryQuestVar%"
         ;msgbox %parameter%
         Run %parameter%
@@ -447,13 +452,15 @@ Afraid:
     ConnectQuestion() {
         global newQuality
         global questionNo
-        FileReadLine , questVar, qStat.dat, questionNo
+        FileReadLine , questVar, qStat.dat, %questionNo%
         questionStats := StrSplit(questVar, "_")
 
         ;msgbox % questionStats[7]
         linkStats := StrSplit(questionStats[7], ",")
-        FileReadLine , conQuestVar, toRemember.dat, linkStats[1] * 2 - 1
-        FileReadLine , conAnsVar, toRemember.dat, linkStats[1] * 2
+
+    conQuestVar := questionStats[9]
+     conAnsVar := questionStats[10]   
+
         if (linkStats[1] != "") {
             InputBox , newQuestion, Linked Question, Create a new question relevant to the previous question / answer and this one... %conQuestVar% : %conAnsVar% New Question: , , , , , , , ,
                 InputBox , newAnswer, Linked Answer, %conQuestVar% : %conAnsVar% New Answer: , , , , , , , ,
@@ -471,16 +478,15 @@ Afraid:
             iteration := questionStats[4]
             interval := questionStats[5]
             importance := questionStats[8]
+            questionSav := questionStats[9]
+            answerSav := questionStats[10]
             relations := LTrim(questionStats[7], linkStats[1])
             relations := LTrim(relations, ",")
-            newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%importance%
+            newStats = %firstDate%_%secondDate%_%easeFactor%_%iteration%_%interval%_1_%relations%_%importance%_%questionSav%_%answerSav%
             FileRead , filecontent, qStat.dat
             StringReplace , filecontent, filecontent, %questionStat%, %newStats%
             FileDelete , qStat.dat
             FileAppend , %filecontent%, qStat.dat
-            sleep 200
-            FileAppend , %newQuestion% `n, toRemember.dat
-            FileAppend , %newAnswer% `n, toRemember.dat
             FormatTime , Current, , yyyyMMddHHmmss
             NextDate = %a_now%
             NextDate += +60, Days
@@ -539,7 +545,7 @@ Afraid:
             toSearch = %newQuestion% %newAnswer%
             vText := GetKeyWords(toSearch)
             linkedQuestions := CreateLinkedQuestions(vText)
-            FileAppend , %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_1 `n, qStat.dat
+            FileAppend , %Current%_%NextDate%000000_2.5_1_1_1_%linkedQuestions%_1_%newQuestion%_%newAnswer% `n, qStat.dat
             FileAppend , %vText%`n, keyWords.dat
         }
 
@@ -595,8 +601,8 @@ Afraid:
             toCompare := questionStats[2]
             if (toCompare <= Current) && (questionStats[6] = 1) && (questionStats[8] = questionPriority) {
                 ;MsgBox, %toCompare% compared to %Current%
-                FileReadLine , questionVar, toRemember.dat, % A_Index * 2 - 1
-                FileReadLine , answerVar, toRemember.dat, % A_Index * 2
+                questionVar := questionStats[9]
+                answerVar := questionStats[10]
                 GuiControl , mainQM: , QCon, % "`n " questionVar ;" (DEBUG): #" questionNo  " priority: " questionPriority
                 GuiControl , mainQM: , ACon, % "`n "
                 currentQNO += 1
@@ -610,7 +616,7 @@ Afraid:
                 break
 
             } else {
-                FileReadLine , questionVar, toRemember.dat, % A_Index * 2 + 1
+                FileReadLine , questionVar, qStat.dat, % A_Index + 1
                 if (ErrorLevel = 1) {
                     ;msgbox % A_Index * 2 + 1
                     if (questionPriority = 0) {
@@ -691,15 +697,16 @@ Afraid:
         }
 
         Gui , wrongM: New, , Wrong Menu
-        Gui , wrongM: Add, Button, gGoogleQuestion, Google Question
-        Gui , wrongM: Add, Button, gConnect, New Linking Question
+         ;These have been deactivated due to lack of need
+        ;Gui , wrongM: Add, Button, gGoogleQuestion, Google Question
+        ;Gui , wrongM: Add, Button, gConnect, New Linking Question
         Gui , wrongM: Add, Button, gRelational, New Relational Question
         Gui , wrongM: Add, Button, gRote, Rote Learn
-        if (elaborationVar = "") {
-            Gui , wrongM: Add, Button, gCreateElaboration, Create Elaboration
-        } else {
-            Gui , wrongM: Add, Button, gShowElaboration, Show Elaboration
-        }
+      ;  if (elaborationVar = "") {
+      ;      Gui , wrongM: Add, Button, gCreateElaboration, Create Elaboration
+      ;  } else {
+      ;      Gui , wrongM: Add, Button, gShowElaboration, Show Elaboration
+      ;  }
         Gui , wrongM: Show, , Wrong Menu
         return
     }
@@ -861,7 +868,9 @@ FormatTime , BugCatch, , yyyyMMdd
                 tempiteration := questionStats[4]
                 tempinterval := questionStats[5]
                 temprelations := questionStats[7]
-                FileAppend , %tempdate%_%tempnewdate%_%tempease%_%tempiteration%_%tempinterval%_1_%temprelations%_0 `n, qStat.dat
+                tempQuestionSav := questionStats[9]
+                tempAnswerSav := questionStats[10]
+                FileAppend , %tempdate%_%tempnewdate%_%tempease%_%tempiteration%_%tempinterval%_1_%temprelations%_0_%tempQuestionSav%_%tempAnswerSav% `n, qStat.dat
                 sleep 200
                 FileAppend , %questionVar% `n%answerVar% `n, toRemember.dat
                 ;msgbox %tempdate%_%tempnewdate%_%tempease%_%tempiteration%_%tempinterval%_1_%temprelations%_0 `n, qStat.dat
@@ -871,6 +880,8 @@ FormatTime , BugCatch, , yyyyMMdd
             isActive := questionStats[6]
             relations := questionStats[7]
             importance := questionStats[8]
+            questionSav := questionStats[9]
+            answerSav := questionStats[10]
             FormatTime , Current, , yyyyMMddHHmmss
                         NextDate := NewDate(interval)
 
@@ -897,7 +908,7 @@ FormatTime , BugCatch, , yyyyMMdd
 
 
             FormatTime , NextDate, %NextDate%, yyyyMMdd
-            newStats = %Current%_%NextDate%000000_%easeFactor%_%iteration%_%interval%_%isActive%_%relations%_%importance%
+            newStats = %Current%_%NextDate%000000_%easeFactor%_%iteration%_%interval%_%isActive%_%relations%_%importance%_%questionSav%_%answerSav%
 
             FileRead , filecontent, qStat.dat
             StringReplace , filecontent, filecontent, %questionStat%, %newStats%
@@ -912,7 +923,9 @@ FormatTime , BugCatch, , yyyyMMdd
                 tempiteration := questionStats[4]
                 tempinterval := questionStats[5]
                 temprelations := questionStats[7]
-                FileAppend , %tempdate%_%tempnewdate%_%tempease%_%tempiteration%_%tempinterval%_1_%temprelations%_0 `n, qStat.dat
+                   tempQuestionSav := questionStats[9]
+                tempAnswerSav := questionStats[10]
+                FileAppend , %tempdate%_%tempnewdate%_%tempease%_%tempiteration%_%tempinterval%_1_%temprelations%_0_%tempQuestionSav%_%tempAnswerSav% `n, qStat.dat
                 sleep 200
                 FileAppend , %questionVar% `n%answerVar% `n, toRemember.dat
                 ;msgbox ask again later

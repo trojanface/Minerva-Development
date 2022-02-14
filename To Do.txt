@@ -1,5 +1,2 @@
-Change save format (concat qStat, toRemember, etc)
 Add pictures
 Add mindmap
-Fix Relational questions
-Auto Updater (Git)

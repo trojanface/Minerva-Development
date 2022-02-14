@@ -11,6 +11,40 @@ xpos := A_ScreenWidth/2-362
 ypos := A_ScreenHeight/2-335
 
 
+
+FileReadLine, VNum, %A_WorkingDir%\Readme.md, 3 ;looks for local version text and stores as vnum
+	if ErrorLevel = 1
+	Vnum = 0
+whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+whr.Open("GET", "https://raw.githubusercontent.com/trojanface/Minerva/master/Readme.md", true)
+whr.Send()
+; Using 'true' above and the call below allows the script to remain responsive.
+whr.WaitForResponse() ;this is taken from the installer. Can also be located as an example on the urldownloadtofile page of the quick reference guide.
+version := whr.ResponseText
+Loop, parse, version, `n,
+{
+	if (A_Index = 3) {
+		version = %A_LoopField%
+	}
+}
+if (version != VNum) {
+MsgBox, Your current version is %Vnum%. The latest is %version%. Minerva will now exit and update.
+	IfMsgBox OK
+	Loop, read, toUpdate.dat 
+{
+FileReadLine, currentLine, toUpdate.dat, %A_Index%
+FileUpdater("https://raw.githubusercontent.com/trojanface/Minerva/master/"currentLine,currentLine)
+}
+		if (ErrorLevel = 1) {
+			MsgBox, There was some error updating the file. You may have the latest version, or it is blocked.
+		} else if (ErrorLevel = 0) {
+			MsgBox, The update appears to have been successful or you clicked cancel. Please restart Minerva
+			ExitApp
+		} else {
+			MsgBox, some other crazy error occured. 
+		}
+}
+
 ;QTarg = 30
 FirstTime()
 Gui, New, , Minerva
@@ -39,7 +73,25 @@ Gui, -Caption
 RefreshFunc()
 return
 
-
+FileUpdater(path,filename) {
+	whr2 := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+		whr2.Open("GET", path, true)
+whr2.Send()
+; Using 'true' above and the call below allows the script to remain responsive.
+whr2.WaitForResponse() ;this is taken from the installer. Can also be located as an example on the urldownloadtofile page of the quick reference guide.
+newFile := whr2.ResponseText
+FileDelete, %A_WorkingDir%\%filename%
+FileAppend, %newFile%, %A_WorkingDir%\%filename%
+;Have had to include the below check as there appears to be some type of bug when AHK Appends above. It is adding a ? to the start of the files. The below removes it.
+FileReadLine, BugCheck, %A_WorkingDir%\%filename%, 1
+if (SubStr(BugCheck, 1, 1) = "?") {
+	FileRead, FileContents, %A_WorkingDir%\%filename%
+	StringTrimLeft, NewFileContents, FileContents, 1
+	FileDelete, %A_WorkingDir%\%filename%
+FileAppend, %NewFileContents%, %A_WorkingDir%\%filename%
+}
+return
+}
 
 
 Refresh:
@@ -57,7 +109,7 @@ FileAppend, , keyWords.dat
 FileAppend, , qStat.dat
 FileAppend, , settings.dat
 FileAppend, , toLearn.txt
-FileAppend, , toRemember.dat
+;FileAppend, , toRemember.dat
 FileCreateDir, backup
 FileAppend, %Current%, firstRun.dat
 }
@@ -208,6 +260,6 @@ BackupFunc("keyWords.dat")
 BackupFunc("qStat.dat")
 BackupFunc("settings.dat")
 BackupFunc("toLearn.txt")
-BackupFunc("toRemember.dat")
+;BackupFunc("toRemember.dat")
 	return
 }
